@@ -4,14 +4,11 @@ defmodule LiveViewAppsWeb.SalesLive do
   alias LiveViewApps.Sales
 
   def mount(_params, _session, socket) do
-    socket =
-      assign(socket,
-        new_orders: Sales.new_orders(),
-        sales_amount: Sales.sales_amount(),
-        satisfaction: Sales.satisfaction()
-      )
+    if connected?(socket) do
+      :timer.send_interval(1200, self(), "realtime")
+    end
 
-    {:ok, socket}
+    {:ok, assign_values(socket)}
   end
 
   def render(assigns) do
@@ -45,10 +42,22 @@ defmodule LiveViewAppsWeb.SalesLive do
         </div>
       </div>
 
-      <button>
+      <button phx-click="refresh">
         <img src="/images/refresh.svg" /> Refresh
       </button>
     </div>
     """
+  end
+
+  def handle_event("refresh", _unsigned_params, socket), do: {:noreply, assign_values(socket)}
+
+  def handle_info("realtime", socket), do: {:noreply, assign_values(socket)}
+
+  def assign_values(socket) do
+    assign(socket,
+      new_orders: Sales.new_orders(),
+      sales_amount: Sales.sales_amount(),
+      satisfaction: Sales.satisfaction()
+    )
   end
 end
