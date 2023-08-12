@@ -5,7 +5,8 @@ defmodule LiveViewAppsWeb.FlightsLive do
     socket =
       assign(socket,
         airport: "",
-        flights: []
+        flights: [],
+        loading: false
       )
 
     {:ok, socket}
@@ -15,7 +16,7 @@ defmodule LiveViewAppsWeb.FlightsLive do
     ~H"""
     <h1>Find a Flight</h1>
     <div id="flights">
-      <form>
+      <form phx-submit="search">
         <input
           type="text"
           name="airport"
@@ -23,6 +24,7 @@ defmodule LiveViewAppsWeb.FlightsLive do
           placeholder="Airport Code"
           autofocus
           autocomplete="off"
+          readonly={@loading}
         />
 
         <button>
@@ -30,31 +32,45 @@ defmodule LiveViewAppsWeb.FlightsLive do
         </button>
       </form>
 
+      <div :if={@loading} class="loader">Loading...</div>
+
       <div class="flights">
         <ul>
-          <%= for flight <- @flights do %>
-            <li>
-              <div class="first-line">
-                <div class="number">
-                  Flight #<%= flight.number %>
-                </div>
-                <div class="origin-destination">
-                  <%= flight.origin %> to <%= flight.destination %>
-                </div>
+          <li :for={flight <- @flights}>
+            <div class="first-line">
+              <div class="number">
+                Flight #<%= flight.number %>
               </div>
-              <div class="second-line">
-                <div class="departs">
-                  Departs: <%= flight.departure_time %>
-                </div>
-                <div class="arrives">
-                  Arrives: <%= flight.arrival_time %>
-                </div>
+              <div class="origin-destination">
+                <%= flight.origin %> to <%= flight.destination %>
               </div>
-            </li>
-          <% end %>
+            </div>
+            <div class="second-line">
+              <div class="departs">
+                Departs: <%= flight.departure_time %>
+              </div>
+              <div class="arrives">
+                Arrives: <%= flight.arrival_time %>
+              </div>
+            </div>
+          </li>
         </ul>
       </div>
     </div>
     """
+  end
+
+  def handle_event("search", %{"airport" => airport}, socket) do
+    send(self(), {:run_search, airport})
+    {:noreply, assign(socket, airport: airport, flights: [], loading: true)}
+  end
+
+  def handle_info({:run_search, airport}, socket) do
+    {:noreply,
+     assign(socket,
+       airport: '',
+       loading: false,
+       flights: LiveViewApps.Flights.search_by_airport(airport)
+     )}
   end
 end
