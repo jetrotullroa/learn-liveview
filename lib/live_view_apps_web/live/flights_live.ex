@@ -6,7 +6,8 @@ defmodule LiveViewAppsWeb.FlightsLive do
       assign(socket,
         airport: "",
         flights: [],
-        loading: false
+        loading: false,
+        matches: %{}
       )
 
     {:ok, socket}
@@ -16,7 +17,7 @@ defmodule LiveViewAppsWeb.FlightsLive do
     ~H"""
     <h1>Find a Flight</h1>
     <div id="flights">
-      <form phx-submit="search">
+      <form phx-submit="search" phx-change="suggest">
         <input
           type="text"
           name="airport"
@@ -25,12 +26,19 @@ defmodule LiveViewAppsWeb.FlightsLive do
           autofocus
           autocomplete="off"
           readonly={@loading}
+          phx-debounce="1000"
+          list="matches"
         />
 
         <button>
           <img src="/images/search.svg" />
         </button>
       </form>
+      <datalist id="matches">
+        <option :for={{code, name} <- @matches} key={code} value={code}>
+          <%= name %>
+        </option>
+      </datalist>
 
       <div :if={@loading} class="loader">Loading...</div>
 
@@ -63,6 +71,11 @@ defmodule LiveViewAppsWeb.FlightsLive do
   def handle_event("search", %{"airport" => airport}, socket) do
     send(self(), {:run_search, airport})
     {:noreply, assign(socket, airport: airport, flights: [], loading: true)}
+  end
+
+  def handle_event("suggest", %{"airport" => prefix}, socket) do
+    matches = LiveViewApps.Airports.suggest(prefix)
+    {:noreply, assign(socket, matches: matches)}
   end
 
   def handle_info({:run_search, airport}, socket) do
