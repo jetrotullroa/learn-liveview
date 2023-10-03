@@ -17,6 +17,14 @@ defmodule LiveViewAppsWeb.BoatsLive do
     ~H"""
     <h1>Daily Boat Rentals</h1>
     <div id="boats">
+      <.promo expiration={3}>
+        <p>
+          Save 25% on your first rental
+        </p>
+        <:legal>
+          <Heroicons.exclamation_circle /> Limit 1 per party
+        </:legal>
+      </.promo>
       <form phx-change="filter">
         <div class="filters">
           <select name="type">
@@ -57,6 +65,30 @@ defmodule LiveViewAppsWeb.BoatsLive do
             </div>
           </div>
         </div>
+      </div>
+      <.promo expiration={2}>
+        <p>
+          Save 25% on your first rental
+        </p>
+        <:legal>
+          <Heroicons.exclamation_circle /> Limit 1 per party
+        </:legal>
+      </.promo>
+    </div>
+    """
+  end
+
+  def promo(assigns) do
+    ~H"""
+    <div class="promo">
+      <div class="deal">
+        <%= render_slot(@inner_block) %>
+      </div>
+      <div class="expiration">
+        Deal expires on <%= @expiration %> hours!
+      </div>
+      <div class="legal">
+        <%= render_slot(@legal) %>
       </div>
     </div>
     """
