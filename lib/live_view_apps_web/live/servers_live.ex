@@ -16,19 +16,29 @@ defmodule LiveViewAppsWeb.ServersLive do
     {:ok, socket}
   end
 
+  def handle_params(%{"id" => id}, _url, socket) do
+    server = Servers.get_server!(String.to_integer(id))
+    {:noreply, assign(socket, page_title: "What's up #{server.name}", selected_server: server)}
+  end
+
+  def handle_params(_params, _url, socket) do
+    {:noreply, assign(socket, selected_server: hd(socket.assigns.servers))}
+  end
+
   def render(assigns) do
     ~H"""
-    <h1>Servers</h1>
+    <h1>Servers<%= " - #{assigns.selected_server.name}" %></h1>
     <div id="servers">
       <div class="sidebar">
         <div class="nav">
-          <a
+          <.link
             :for={server <- @servers}
+            patch={~p"/servers?#{[id: server.id]}"}
             class={if server == @selected_server, do: "selected"}
           >
             <span class={server.status}></span>
             <%= server.name %>
-          </a>
+          </.link>
         </div>
         <div class="coffees">
           <button phx-click="drink">
@@ -64,7 +74,9 @@ defmodule LiveViewAppsWeb.ServersLive do
               </blockquote>
             </div>
           </div>
-          <div class="links"></div>
+          <div class="links">
+            <.link navigate={~p"/light"}>Adjust Light</.link>
+          </div>
         </div>
       </div>
     </div>
