@@ -9,10 +9,9 @@ defmodule LiveViewAppsWeb.VolunteersLive do
     form = to_form(changeset)
 
     socket =
-      assign(socket,
-        volunteers: volunteers,
-        form: form
-      )
+      socket
+      |> stream(:volunteers, volunteers)
+      |> assign(:form, form)
 
     {:ok, socket}
   end
@@ -37,20 +36,25 @@ defmodule LiveViewAppsWeb.VolunteersLive do
         />
         <.button phx-disable-with="Submitting...">Check In</.button>
       </.form>
-      <div
-        :for={volunteer <- @volunteers}
-        class={"volunteer #{if volunteer.checked_out, do: "out"}"}
-      >
-        <div class="name">
-          <%= volunteer.name %>
-        </div>
-        <div class="phone">
-          <%= volunteer.phone %>
-        </div>
-        <div class="status">
-          <button>
-            <%= if volunteer.checked_out, do: "Check In", else: "Check Out" %>
-          </button>
+      <div id="volunteers" phx-update="stream">
+        <div
+          :for={{volunteer_id, volunteer} <- @streams.volunteers}
+          class={"volunteer #{if volunteer.checked_out, do: "out"}"}
+          id={volunteer_id}
+        >
+          <div class="name">
+            <%= volunteer.name %>
+          </div>
+          <div class="phone">
+            <%= volunteer.phone %>
+          </div>
+          <div class="status">
+            <button>
+              <%= if volunteer.checked_out,
+                do: "Check In",
+                else: "Check Out" %>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -69,11 +73,14 @@ defmodule LiveViewAppsWeb.VolunteersLive do
   def handle_event("save", %{"volunteer" => volunteer_params}, socket) do
     case Volunteers.create_volunteer(volunteer_params) do
       {:ok, volunteer} ->
-        {:noreply,
-         assign(socket,
-           volunteers: [volunteer | socket.assigns.volunteers],
-           form: to_form(Volunteers.change_volunteer(%Volunteers.Volunteer{}))
-         )}
+        changeset = Volunteers.change_volunteer(%Volunteers.Volunteer{})
+
+        socket =
+          socket
+          |> stream_insert(:volunteers, volunteer, at: 0)
+          |> assign(form: to_form(changeset))
+
+        {:noreply, socket}
 
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
