@@ -17,6 +17,31 @@ defmodule LiveViewApps.Volunteers do
       [%Volunteer{}, ...]
 
   """
+  def subscribe do
+    Phoenix.PubSub.subscribe(LiveViewApps.PubSub, "volunteers")
+  end
+
+  def broadcast({:ok, volunteer}, tag) do
+    Phoenix.PubSub.broadcast(
+      LiveViewApps.PubSub,
+      "volunteers",
+      {tag, volunteer}
+    )
+
+    {:ok, volunteer}
+  end
+
+  def broadcast({:error, _changeset} = error, _tag), do: error
+
+  @doc """
+  Returns the list of volunteers.
+
+  ## Examples
+
+      iex> list_volunteers()
+      [%Volunteer{}, ...]
+
+  """
   def list_volunteers do
     Repo.all(from v in Volunteer, order_by: [desc: v.id])
   end
@@ -53,6 +78,7 @@ defmodule LiveViewApps.Volunteers do
     %Volunteer{}
     |> Volunteer.changeset(attrs)
     |> Repo.insert()
+    |> broadcast(:volunteer_created)
   end
 
   @doc """
@@ -71,6 +97,7 @@ defmodule LiveViewApps.Volunteers do
     volunteer
     |> Volunteer.changeset(attrs)
     |> Repo.update()
+    |> broadcast(:volunteer_updated)
   end
 
   @doc """

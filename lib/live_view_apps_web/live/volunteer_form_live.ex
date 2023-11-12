@@ -6,16 +6,15 @@ defmodule LiveViewAppsWeb.VolunteerFormLive do
 
   def mount(socket) do
     changeset = Volunteers.change_volunteer(%Volunteer{})
-    form = to_form(changeset)
 
-    {:ok, assign(socket, form: form)}
+    {:ok, assign(socket, :form, to_form(changeset))}
   end
 
   def update(assigns, socket) do
     socket =
       socket
       |> assign(assigns)
-      |> assign(count: assigns.count + 1)
+      |> assign(:count, assigns.count + 1)
 
     {:ok, socket}
   end
@@ -24,9 +23,8 @@ defmodule LiveViewAppsWeb.VolunteerFormLive do
     ~H"""
     <div>
       <div class="count">
-        <h3>Volunteer #<%= @count %></h3>
+        Go for it! You'll be volunteer #<%= @count %>
       </div>
-
       <.form
         for={@form}
         phx-submit="save"
@@ -35,18 +33,20 @@ defmodule LiveViewAppsWeb.VolunteerFormLive do
       >
         <.input
           field={@form[:name]}
-          placeholder="Your name here..."
+          placeholder="Name"
           autocomplete="off"
           phx-debounce="2000"
         />
         <.input
-          type="tel"
           field={@form[:phone]}
-          placeholder="434-23-31"
+          type="tel"
+          placeholder="Phone"
           autocomplete="off"
           phx-debounce="blur"
         />
-        <.button phx-disable-with="Submitting...">Check In</.button>
+        <.button phx-disable-with="Saving...">
+          Check In
+        </.button>
       </.form>
     </div>
     """
@@ -58,17 +58,18 @@ defmodule LiveViewAppsWeb.VolunteerFormLive do
       |> Volunteers.change_volunteer(volunteer_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset))}
+    {:noreply, assign(socket, :form, to_form(changeset))}
   end
 
   def handle_event("save", %{"volunteer" => volunteer_params}, socket) do
     case Volunteers.create_volunteer(volunteer_params) do
-      {:ok, volunteer} ->
-        send(self(), {:volunteer_created, volunteer})
-        {:noreply, assign(socket, form: to_form(Volunteers.change_volunteer(%Volunteer{})))}
+      {:ok, _volunteer} ->
+        changeset = Volunteers.change_volunteer(%Volunteer{})
+
+        {:noreply, assign(socket, :form, to_form(changeset))}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+        {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
 end
