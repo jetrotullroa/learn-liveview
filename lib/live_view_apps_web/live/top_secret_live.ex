@@ -1,8 +1,6 @@
 defmodule LiveViewAppsWeb.TopSecretLive do
   use LiveViewAppsWeb, :live_view
 
-  on_mount {LiveViewAppsWeb.UserAuth, :ensure_authenticated}
-
   def mount(_params, _session, socket) do
     {:ok, socket}
   end

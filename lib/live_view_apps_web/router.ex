@@ -30,7 +30,6 @@ defmodule LiveViewAppsWeb.Router do
     live "/servers", ServersLive
     live "/donations", DonationsLive
     live "/volunteers", VolunteersLive
-    live "/presence", PresenceLive
     live "/bookings", BookingsLive
     live "/shop", ShopLive
     live "/juggling", JugglingLive
@@ -44,7 +43,11 @@ defmodule LiveViewAppsWeb.Router do
   scope "/", LiveViewAppsWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live "/topsecret", TopSecretLive
+    live_session :authenticate,
+      on_mount: {LiveViewAppsWeb.UserAuth, :ensure_authenticated} do
+      live "/topsecret", TopSecretLive
+      live "/presence", PresenceLive
+    end
   end
 
   # Other scopes may use custom stacks.
