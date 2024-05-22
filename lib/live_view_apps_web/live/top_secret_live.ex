@@ -12,7 +12,7 @@ defmodule LiveViewAppsWeb.TopSecretLive do
       <div class="mission">
         <h1>Top Secret</h1>
         <h2>Your Mission</h2>
-        <h3>(spy number here)</h3>
+        <h3>(spy number 00<%= @current_user.id %>)</h3>
         <p>
           Storm the castle and capture 3 bottles of Elixir.
         </p>
